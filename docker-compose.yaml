@@ -1,0 +1,117 @@
+version: '3'
+
+services:
+  oltp-db:
+    image: postgres:16
+    container_name: oltp-db
+    environment:
+      POSTGRES_DB: oltp
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - oltp_data:/var/lib/postgresql/data
+      - ./oltp/migrations:/docker-entrypoint-initdb.d
+    command: ["postgres", "-c", "max_prepared_transactions=100"]
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "user", "-d", "oltp"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      app-net:
+
+  zookeeper:
+    container_name: zookeeper
+    image: confluentinc/cp-zookeeper:7.4.4
+    ports:
+      - "2181:2181"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOOKEEPER_CLIENT_PORT=2181
+      - ZOOKEEPER_TICK_TIME=2000
+    networks:
+      - kafka-net
+      - app-net
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "echo stat | nc localhost 2181" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.4
+    container_name: kafka
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_LISTENERS=PLAINTEXT://:9092,EXTERNAL://:29092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://host.docker.internal:29092
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_CREATE_TOPICS="vehicle_positions:1:1"
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    volumes:
+      - ./kafka/scripts/create-topics.sh:/tmp/create-topics.sh
+    command: >
+      sh -c "
+      /etc/confluent/docker/run &
+      sleep 20 &&
+      chmod +x /tmp/create-topics.sh &&
+      /tmp/create-topics.sh &&
+      wait
+      "
+    networks:
+      - kafka-net
+      - app-net
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8085:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092, localhost:9092, localhost:29092
+    depends_on:
+      - kafka
+    networks:
+      - kafka-net
+      - app-net
+
+  generator:
+    build:
+      context: .
+      dockerfile: generator/Dockerfile
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./configs:/app/configs
+    networks:
+      app-net:
+    depends_on:
+      oltp-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+volumes:
+  oltp_data:
+
+networks:
+  kafka-net:
+    driver: bridge
+  app-net:
+    driver: bridge
