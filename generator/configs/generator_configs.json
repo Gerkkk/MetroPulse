@@ -1,0 +1,17 @@
+{
+  "client_config": {
+    "pos_addr": "kafka:9092",
+    "pos_topic": "vehicle_positions"
+  },
+  "manager_config": {
+    "dataPath": "static/data.json"
+  },
+  "db_config": {
+    "host": "oltp-db",
+    "port": "5432",
+    "username": "user",
+    "password": "password",
+    "dbname": "oltp",
+    "sslmode": "disable"
+  }
+}

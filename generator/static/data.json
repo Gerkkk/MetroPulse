@@ -1,0 +1,11 @@
+{
+  "first_name": ["Александр", "Алексей", "Михаил", "Дмитрий", "Иван", "Сергей", "Андрей", "Максим", "Артём", "Кирилл", "Илья", "Матвей", "Никита", "Егор", "Владимир", "Павел", "Роман", "Тимофей", "Степан","Фёдор"],
+  "second_name": ["Иванов", "Петров", "Сидоров", "Смирнов", "Кузнецов", "Попов", "Соколов", "Лебедев", "Козлов", "Новиков", "Морозов", "Волков", "Соловьёв", "Васильев", "Зайцев", "Павлов", "Семёнов", "Голубев", "Виноградов", "Богданов"],
+  "email": ["alex", "max", "daria", "mikhail", "anna", "sergey", "natasha", "andrey", "irina", "nikita", "ekaterina", "ivan", "olga", "dmitry", "svetlana", "artem", "maria", "stanislav", "yulia", "roman"],
+  "city": ["Moscow", "Kazan", "Saint Petersburg"],
+  "route_prefix": ["A", "B", "C"],
+  "vehicle_type": ["bus", "tram", "metro"],
+  "vehicle_cost": [45, 55, 67],
+  "payment_method": ["card", "sbp", "wallet"],
+  "payment_status": ["success", "failed", "pending"]
+}
