@@ -107,6 +107,73 @@ services:
       kafka:
         condition: service_healthy
 
+  minio:
+    image: minio/minio
+    container_name: minio_s3
+    command: server /data --console-address :9001
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin1234
+    volumes:
+      - ./minio/data:/data
+    networks:
+      app-net:
+    depends_on:
+      oltp-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  spark-master:
+    build:
+      context: .
+      dockerfile: spark/Dockerfile
+      args:
+        BASE_IMAGE: bde2020/spark-master:3.3.0-hadoop3.3
+    container_name: spark-master
+    restart: unless-stopped
+    environment:
+      - INIT_DAEMON_STEP=setup_spark
+      - HADOOP_CONF_DIR=/spark/conf
+      - AWS_ACCESS_KEY_ID=admin
+      - AWS_SECRET_ACCESS_KEY=admin1234
+    ports:
+      - "7070:7070"
+      - "8090:8090" # ui
+    volumes:
+      - ./spark/apps:/opt/spark-apps
+      - ./spark/logs:/spark/spark-events
+      - ./spark/conf:/spark/conf
+    networks:
+      app-net:
+
+  spark-worker:
+    build:
+      context: .
+      dockerfile: spark/Dockerfile
+      args:
+        BASE_IMAGE: bde2020/spark-worker:3.3.0-hadoop3.3
+    container_name: spark-worker-1
+    restart: unless-stopped
+    depends_on:
+      - spark-master
+    environment:
+      - SPARK_MASTER=spark://spark-master:7070
+      - HADOOP_CONF_DIR=/spark/conf
+      - AWS_ACCESS_KEY_ID=admin
+      - AWS_SECRET_ACCESS_KEY=admin1234
+    ports:
+      - "8091:8091"   # ui
+    volumes:
+      - ./spark/apps:/opt/spark-apps
+      - ./spark/logs:/spark/spark-events
+      - ./spark/conf:/spark/conf
+    networks:
+      app-net:
+
 volumes:
   oltp_data:
 
