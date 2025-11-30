@@ -174,8 +174,26 @@ services:
     networks:
       app-net:
 
+  greenplum:
+    build:
+      context: ./greenplum
+      dockerfile: Dockerfile
+    container_name: dwh
+    hostname: dwh
+    expose:
+      - "5432"
+    ports:
+      - "5432:5432"
+    volumes:
+      - dwh-data:/data
+      - ./greenplum/migrations:/migrations
+    networks:
+      app-net:
+    restart: unless-stopped
+
 volumes:
   oltp_data:
+  dwh-data:
 
 networks:
   kafka-net:
