@@ -109,7 +109,7 @@ services:
 
   minio:
     image: minio/minio
-    container_name: minio_s3
+    container_name: minio
     command: server /data --console-address :9001
     ports:
       - "9000:9000"
@@ -132,12 +132,13 @@ services:
       context: sparks
       dockerfile: Dockerfile
       args:
-        - PREINSTALLED_PACKAGES=org.apache.hadoop:hadoop-aws:3.4.1,software.amazon.awssdk:s3:2.25.53
+        - PREINSTALLED_PACKAGES=org.apache.hadoop:hadoop-aws:3.4.2,software.amazon.awssdk:s3:2.25.53,org.postgresql:postgresql:42.7.7
     container_name: spark-staging
     environment:
-      - SPARK_PACKAGES=org.apache.hadoop:hadoop-aws:3.4.1,software.amazon.awssdk:s3:2.25.53
+      - SPARK_PACKAGES=org.apache.hadoop:hadoop-aws:3.4.2,software.amazon.awssdk:s3:2.25.53,org.postgresql:postgresql:42.7.7
+      - ADDITIONAL_FLAGS=--driver-class-path postgresql-9.4.1207.jar --jars postgresql-9.4.1207.jar
     volumes:
-      - ./sparks/sparkStaging/main.py:/opt/spark/scripts/main.py
+      - ./sparks/sparkStaging:/opt/spark/scripts
       - ./sparks/sparkStaging/config.cfg:/opt/spark/config.cfg
     networks:
       app-net:

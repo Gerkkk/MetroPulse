@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM apache/spark:4.0.0
+FROM apache/spark:4.1.0
 USER root
 
 RUN mkdir /artifacts
@@ -39,4 +39,4 @@ RUN if [ "${PREINSTALLED_PACKAGES}" != '""' ]; then \
         ./opt/spark/bin/spark-submit --packages $PREINSTALLED_PACKAGES ${SPARK_LOCAL_DIRS}/dummy.py; \
     fi
 
-CMD ./opt/spark/bin/spark-submit --packages $SPARK_PACKAGES --properties-file $CONFIG $MAIN_SCRIPT
+CMD ./opt/spark/bin/spark-submit $ADDITIONAL_FLAGS --packages $SPARK_PACKAGES --properties-file $CONFIG $MAIN_SCRIPT

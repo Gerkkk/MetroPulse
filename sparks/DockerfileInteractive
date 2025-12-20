@@ -39,6 +39,6 @@ RUN if [ "${PREINSTALLED_PACKAGES}" != '""' ]; then \
         ./opt/spark/bin/spark-submit --packages $PREINSTALLED_PACKAGES ${SPARK_LOCAL_DIRS}/dummy.py; \
     fi
 
-CMD ./opt/spark/bin/spark-submit --packages $SPARK_PACKAGES --properties-file $CONFIG $MAIN_SCRIPT
+# CMD ./opt/spark/bin/spark-submit --packages $SPARK_PACKAGES --properties-file $CONFIG $MAIN_SCRIPT
 
 CMD ["tail", "-f", "/dev/null"]
