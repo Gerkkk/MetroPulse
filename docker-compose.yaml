@@ -112,8 +112,8 @@ services:
     container_name: minio_s3
     command: server /data --console-address :9001
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "19000:9000"
+      - "19001:9001"
     environment:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: admin1234
@@ -190,6 +190,30 @@ services:
     networks:
       app-net:
     restart: unless-stopped
+  
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse
+    hostname: clickhouse
+    ports:
+      - "8123:8123"
+      - "29000:9000"
+    environment:
+      - CLICKHOUSE_DB=analytics
+      - CLICKHOUSE_USER=admin
+      - CLICKHOUSE_PASSWORD=admin123
+      - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - ./clickhouse_data:/var/lib/clickhouse
+      - ./clickhouse_logs:/var/log/clickhouse-server
+    networks:
+      - app-net
+    restart: unless-stopped
+
 
 volumes:
   oltp_data:
