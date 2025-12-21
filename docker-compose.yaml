@@ -109,7 +109,7 @@ services:
 
   minio:
     image: minio/minio
-    container_name: minio_s3
+    container_name: minio
     command: server /data --console-address :9001
     ports:
       - "19000:9000"
@@ -127,50 +127,19 @@ services:
       kafka:
         condition: service_healthy
 
-  spark-master:
+  spark-staging:
     build:
-      context: .
-      dockerfile: spark/Dockerfile
+      context: sparks
+      dockerfile: Dockerfile
       args:
-        BASE_IMAGE: bde2020/spark-master:3.3.0-hadoop3.3
-    container_name: spark-master
-    restart: unless-stopped
+        - PREINSTALLED_PACKAGES=org.apache.hadoop:hadoop-aws:3.4.2,software.amazon.awssdk:s3:2.25.53,org.postgresql:postgresql:42.7.7
+    container_name: spark-staging
     environment:
-      - INIT_DAEMON_STEP=setup_spark
-      - HADOOP_CONF_DIR=/spark/conf
-      - AWS_ACCESS_KEY_ID=admin
-      - AWS_SECRET_ACCESS_KEY=admin1234
-    ports:
-      - "7070:7070"
-      - "8090:8090" # ui
+      - SPARK_PACKAGES=org.apache.hadoop:hadoop-aws:3.4.2,software.amazon.awssdk:s3:2.25.53,org.postgresql:postgresql:42.7.7
+      - ADDITIONAL_FLAGS=--driver-class-path postgresql-9.4.1207.jar --jars postgresql-9.4.1207.jar
     volumes:
-      - ./spark/apps:/opt/spark-apps
-      - ./spark/logs:/spark/spark-events
-      - ./spark/conf:/spark/conf
-    networks:
-      app-net:
-
-  spark-worker:
-    build:
-      context: .
-      dockerfile: spark/Dockerfile
-      args:
-        BASE_IMAGE: bde2020/spark-worker:3.3.0-hadoop3.3
-    container_name: spark-worker-1
-    restart: unless-stopped
-    depends_on:
-      - spark-master
-    environment:
-      - SPARK_MASTER=spark://spark-master:7070
-      - HADOOP_CONF_DIR=/spark/conf
-      - AWS_ACCESS_KEY_ID=admin
-      - AWS_SECRET_ACCESS_KEY=admin1234
-    ports:
-      - "8091:8091"   # ui
-    volumes:
-      - ./spark/apps:/opt/spark-apps
-      - ./spark/logs:/spark/spark-events
-      - ./spark/conf:/spark/conf
+      - ./sparks/sparkStaging:/opt/spark/scripts
+      - ./sparks/sparkStaging/config.cfg:/opt/spark/config.cfg
     networks:
       app-net:
 
