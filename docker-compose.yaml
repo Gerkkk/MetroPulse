@@ -183,6 +183,21 @@ services:
       - app-net
     restart: unless-stopped
 
+  spark-gp-to-click:
+    build:
+      context: sparks
+      dockerfile: Dockerfile
+      args:
+        PREINSTALLED_PACKAGES: "org.postgresql:postgresql:42.7.7,com.clickhouse:clickhouse-jdbc:0.9.5"
+    container_name: spark-gp-to-click
+    environment:
+      SPARK_PACKAGES: "org.postgresql:postgresql:42.7.7,com.clickhouse:clickhouse-jdbc:0.9.5"
+    volumes:
+      - ./sparks/sparkGpToClick:/opt/spark/scripts
+      - ./sparks/sparkGpToClick/config.cfg:/opt/spark/config.cfg
+    networks:
+      app-net:
+
 
 volumes:
   oltp_data:
