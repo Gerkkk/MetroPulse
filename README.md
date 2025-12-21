@@ -26,9 +26,7 @@ graph TB
     end
 
     subgraph ETL["ОБРАБОТКА ДАННЫХ"]
-        SparkMaster[Spark Master]
-        SparkWorker[Spark Worker]
-        SparkMaster -->|Управление| SparkWorker
+        SparkWorkers[Spark Workers]
     end
 
     subgraph DWH["DATA WAREHOUSE"]
@@ -49,18 +47,15 @@ graph TB
         CH[(ClickHouse OLAP)]
     end
 
-    Kafka ==>|Spark читает из Kafka| SparkMaster
+    Kafka ==>|Spark читает из Kafka| SparkWorkers
     
-    SparkMaster -->|Обработка данных| SparkWorker
-    SparkWorker ==>|Spark записывает Parquet| MinIO
+    SparkWorkers ==>|Spark записывает Parquet| MinIO
     
-    MinIO ==>|Spark читает Parquet| SparkMaster
-    SparkMaster -->|ETL: Очистка, Трансформации, SCD Type 2| SparkWorker
-    SparkWorker ==>|Spark загружает данные| GP
+    MinIO ==>|Spark читает Parquet| SparkWorkers
+    SparkWorkers ==>|Spark загружает данные| GP
     
-    GP ==>|Spark читает для агрегации| SparkMaster
-    SparkMaster -->|Агрегации и витрины| SparkWorker
-    SparkWorker ==>|Spark загружает витрины| CH
+    GP ==>|Spark читает для агрегации| SparkWorkers
+    SparkWorkers ==>|Spark загружает агрегированные данные| CH
 ```
 
 ### Поток данных
@@ -245,6 +240,8 @@ erDiagram
 | **Аудит данных** | Ограниченный | Полный (load_date, load_source) | DV |
 | **Параллельная загрузка** | Зависимости между таблицами | Независимые Hubs/Links/Satellites | DV |
 
+По итогу был выбран Data Vault 2.0, так как он подходит для больших и сложных систем, а также позволяет легко добавлять новые источники данных.
+
 ## Реализация SCD Type 2
 
 Debezium используется для захвата изменений из PostgreSQL OLTP в реальном времени. Он читает Write-Ahead Log (WAL) PostgreSQL и публикует все операции INSERT/UPDATE/DELETE как события в Kafka топики (users_cdc, routes_cdc, vehicles_cdc, rides_cdc, payments_cdc). Это позволяет получать изменения без нагрузки на OLTP базу и обеспечивает полную историю всех модификаций данных для последующей обработки в Spark и загрузки в Data Vault с сохранением временных меток и источника изменений.
@@ -253,6 +250,8 @@ SCD Type 2 реализован в Satellites таблицах (S_USERS, S_ROUTE
 
 
 ## Оркестрация с Apache Airflow
+
+В рамках данного проекта такая оркестрация не была реализована, но есть схема, показывающая как это можно было сделать:
 
 ```mermaid
 graph LR
