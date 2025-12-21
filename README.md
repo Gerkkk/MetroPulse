@@ -1,6 +1,15 @@
 # MetroPulse
 
 Аналитическая платформа для сервиса отслеживания общественного транспорта в реальном времени.
+Позволяет собирать данные о работе городской транспортной системы (передвижения транспорта, данные загруженности маршрутов, доходах от продаж билетов и т.д.) и хранить их в удобном для аналитиков формате.
+
+## Высокоуровневая структура и набор технологий
+
+- **0**: Генерация входных данных, запись в OLTP базу и Kafka-очередь
+- **1**: Чтение из Kafka и из Postgres (Через Debezium + Kafka) → запись в MinIO (Parquet) (Spark)
+- **2**: ETL из MinIO → Greenplum (Spark)
+- **3**: Агрегация из Greenplum → ClickHouse(витрины) (Spark)
+- **4**: Проверка качества данных (row counts, null checks)
 
 ## Архитектура
 
@@ -201,7 +210,9 @@ erDiagram
 
 ### MinIO
 - Стандартный S3 API для работы с объектами
-- Open source
+- Open source (Пока еще, но не надолго)
+- Поднимается в docker-compose
+- Не требует сложной распределенной структуры с compute и storage нодами, как hadoop
 
 ### Apache Spark
 - Eдиный движок для всех ETL операций
@@ -253,6 +264,11 @@ SCD Type 2 реализован в Satellites таблицах (S_USERS, S_ROUTE
 
 В рамках данного проекта такая оркестрация не была реализована, но есть схема, показывающая как это можно было сделать:
 
+- **Task 1**: Чтение из Kafka и из Postgres (Через Debezium + Kafka) → запись в MinIO (Parquet) (Spark)
+- **Task 2**: ETL из MinIO → Greenplum (Spark)
+- **Task 3**: Агрегация из Greenplum → ClickHouse(витрины) (Spark)
+- **Task 4**: Проверка качества данных (row counts, null checks)
+
 ```mermaid
 graph LR
     Start([Airflow Scheduler<br/>Ежедневно]) --> Task1[Task 1:<br/>Kafka to MinIO<br/>Spark Job]
@@ -270,8 +286,21 @@ graph LR
     Retry3 -.->|Все попытки failed| Alert
 ```
 
-**Структура:**
-- **Task 1**: Чтение из Kafka → запись в MinIO (Parquet)
-- **Task 2**: ETL из MinIO → Greenplum (Hubs → Links → Satellites с SCD Type 2)
-- **Task 3**: Агрегация из Greenplum → ClickHouse (витрины)
-- **Task 4**: Проверка качества данных (row counts, null checks)
+## Запуск и наблюдаемость
+
+Для запуска проекта выполните 
+
+```bash
+docker-compose up
+```
+
+в директории MetroPulse
+
+После запуска будут доступны UI разных частей системы. В них можно посмотреть на переливания данных.
+
+```bash
+localhost:9001 - UI Minio
+http://localhost:8085/ - UI Kafka
+                       - UI ClickHouse
+```
+
