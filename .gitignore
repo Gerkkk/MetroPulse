@@ -2,3 +2,4 @@ generator/.idea
 clickhouse_data
 clickhouse_logs
 .vscode
+minio
