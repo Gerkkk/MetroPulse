@@ -301,6 +301,6 @@ docker-compose up
 ```bash
 localhost:9001 - UI Minio
 http://localhost:8085/ - UI Kafka
-                       - UI ClickHouse
+http://localhost:8123/ - UI ClickHouse
 ```
 
