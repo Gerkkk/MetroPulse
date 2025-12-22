@@ -194,6 +194,7 @@ services:
       SPARK_PACKAGES: "org.postgresql:postgresql:42.7.7,com.clickhouse:clickhouse-jdbc:0.9.5"
     volumes:
       - ./sparks/sparkGpToClick:/opt/spark/scripts
+      - ./clickhouse/queries:/opt/spark/queries
       - ./sparks/sparkGpToClick/config.cfg:/opt/spark/config.cfg
     networks:
       app-net:
