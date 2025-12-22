@@ -113,11 +113,11 @@ services:
 
   minio:
     image: minio/minio
-    container_name: minio_s3
+    container_name: minio
     command: server /data --console-address :9001
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "19000:9000"
+      - "19001:9001"
     environment:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: admin1234
@@ -154,50 +154,19 @@ services:
     networks:
       - app-net
 
-  spark-master:
+  spark-staging:
     build:
-      context: .
-      dockerfile: spark/Dockerfile
+      context: sparks
+      dockerfile: Dockerfile
       args:
-        BASE_IMAGE: bde2020/spark-master:3.3.0-hadoop3.3
-    container_name: spark-master
-    restart: unless-stopped
+        - PREINSTALLED_PACKAGES=org.apache.hadoop:hadoop-aws:3.4.2,software.amazon.awssdk:s3:2.25.53,org.postgresql:postgresql:42.7.7
+    container_name: spark-staging
     environment:
-      - INIT_DAEMON_STEP=setup_spark
-      - HADOOP_CONF_DIR=/spark/conf
-      - AWS_ACCESS_KEY_ID=admin
-      - AWS_SECRET_ACCESS_KEY=admin1234
-    ports:
-      - "7070:7070"
-      - "8090:8090" # ui
+      - SPARK_PACKAGES=org.apache.hadoop:hadoop-aws:3.4.2,software.amazon.awssdk:s3:2.25.53,org.postgresql:postgresql:42.7.7
+      - ADDITIONAL_FLAGS=--driver-class-path postgresql-9.4.1207.jar --jars postgresql-9.4.1207.jar
     volumes:
-      - ./spark/apps:/opt/spark-apps
-      - ./spark/logs:/spark/spark-events
-      - ./spark/conf:/spark/conf
-    networks:
-      app-net:
-
-  spark-worker:
-    build:
-      context: .
-      dockerfile: spark/Dockerfile
-      args:
-        BASE_IMAGE: bde2020/spark-worker:3.3.0-hadoop3.3
-    container_name: spark-worker-1
-    restart: unless-stopped
-    depends_on:
-      - spark-master
-    environment:
-      - SPARK_MASTER=spark://spark-master:7070
-      - HADOOP_CONF_DIR=/spark/conf
-      - AWS_ACCESS_KEY_ID=admin
-      - AWS_SECRET_ACCESS_KEY=admin1234
-    ports:
-      - "8091:8091"   # ui
-    volumes:
-      - ./spark/apps:/opt/spark/apps
-      - ./spark/logs:/spark/spark-events
-      - ./spark/conf:/opt/spark/conf
+      - ./sparks/sparkStaging:/opt/spark/scripts
+      - ./sparks/sparkStaging/config.cfg:/opt/spark/config.cfg
     networks:
       app-net:
 
@@ -217,6 +186,46 @@ services:
     networks:
       app-net:
     restart: unless-stopped
+  
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse
+    hostname: clickhouse
+    ports:
+      - "8123:8123"
+      - "29000:9000"
+    environment:
+      - CLICKHOUSE_DB=analytics
+      - CLICKHOUSE_USER=admin
+      - CLICKHOUSE_PASSWORD=admin123
+      - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - ./clickhouse_data:/var/lib/clickhouse
+      - ./clickhouse_logs:/var/log/clickhouse-server
+    networks:
+      - app-net
+    restart: unless-stopped
+
+  spark-gp-to-click:
+    build:
+      context: sparks
+      dockerfile: Dockerfile
+      args:
+        PREINSTALLED_PACKAGES: "org.postgresql:postgresql:42.7.7,com.clickhouse:clickhouse-jdbc:0.9.5"
+    container_name: spark-gp-to-click
+    environment:
+      SPARK_PACKAGES: "org.postgresql:postgresql:42.7.7,com.clickhouse:clickhouse-jdbc:0.9.5"
+    volumes:
+      - ./sparks/sparkGpToClick:/opt/spark/scripts
+      - ./clickhouse/queries:/opt/spark/queries
+      - ./sparks/sparkGpToClick/config.cfg:/opt/spark/config.cfg
+    networks:
+      app-net:
+
 
   kafka-connect:
     image: debezium/connect:2.6
