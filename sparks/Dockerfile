@@ -25,6 +25,8 @@ RUN chown -R spark /artifacts
 
 ENV LD_LIBRARY_PATH /opt/hadoop/lib/native/
 
+RUN pip install JayDeBeApi
+
 USER spark
 
 ENV SPARK_PACKAGES ""

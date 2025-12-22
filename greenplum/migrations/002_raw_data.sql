@@ -3,9 +3,9 @@ CREATE TABLE RAW_USERS (
     user_name VARCHAR,
     email VARCHAR,
     city VARCHAR,
+    created_at TIMESTAMP,
     upload_timestamp TIMESTAMP,
-    load_sorce VARCHAR,
-    created_at TIMESTAMP
+    load_sorce VARCHAR
 );
 
 CREATE TABLE RAW_ROUTES (
@@ -14,8 +14,7 @@ CREATE TABLE RAW_ROUTES (
     vehicle_type VARCHAR,
     base_fare DECIMAL(10, 2),
     upload_timestamp TIMESTAMP,
-    load_sorce VARCHAR,
-    created_at TIMESTAMP
+    load_sorce VARCHAR
 );
 
 CREATE TABLE RAW_VEHICLES (
@@ -24,8 +23,7 @@ CREATE TABLE RAW_VEHICLES (
     licence_plate VARCHAR,
     capacity INTEGER,
     upload_timestamp TIMESTAMP,
-    load_sorce VARCHAR,
-    created_at TIMESTAMP
+    load_sorce VARCHAR
 );
 
 CREATE TABLE RAW_RIDES (
@@ -37,8 +35,7 @@ CREATE TABLE RAW_RIDES (
     end_time TIMESTAMP,
     fare_amount DECIMAL(10, 2),
     upload_timestamp TIMESTAMP,
-    load_sorce VARCHAR,
-    created_at TIMESTAMP
+    load_sorce VARCHAR
 );
 
 CREATE TABLE RAW_PAYMENTS (
@@ -51,4 +48,17 @@ CREATE TABLE RAW_PAYMENTS (
     upload_timestamp TIMESTAMP,
     load_sorce VARCHAR,
     created_at TIMESTAMP
+);
+
+CREATE TABLE RAW_POSITIONS (
+    event_id VARCHAR,
+    vehicle_id INTEGER,
+    route_number VARCHAR,
+    latitude DECIMAL(20, 10),
+    longitude DECIMAL(20, 10),
+    speed DECIMAL(10, 2),
+    passengers_estimated INTEGER,
+    event_time TIMESTAMP,
+    upload_timestamp TIMESTAMP,
+    load_sorce VARCHAR
 );
