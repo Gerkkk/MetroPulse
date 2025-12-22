@@ -208,7 +208,8 @@ CREATE TABLE S_USERS (
   city varchar,
   is_current bool,
   valid_from timestamp,
-  valid_to timestamp
+  valid_to timestamp,
+  __ts_ms timestamp
 )
 WITH (appendonly=true, orientation=column, compresstype=ZSTD)
 DISTRIBUTED BY (id)
@@ -226,7 +227,8 @@ CREATE TABLE S_ROUTES (
   base_fare DECIMAL(10,2),
   is_current bool,
   valid_from timestamp,
-  valid_to timestamp
+  valid_to timestamp,
+  __ts_ms timestamp
 )
 WITH (appendonly=true, orientation=column, compresstype=ZSTD)
 DISTRIBUTED BY (id)
@@ -243,7 +245,8 @@ CREATE TABLE S_VEHICLES (
   capacity int,
   is_current bool,
   valid_from timestamp,
-  valid_to timestamp
+  valid_to timestamp,
+  __ts_ms timestamp
 )
 WITH (appendonly=true, orientation=column, compresstype=ZSTD)
 DISTRIBUTED BY (id)
@@ -261,7 +264,8 @@ CREATE TABLE S_RIDES (
   fare_amount DECIMAL(10,2),
   is_current bool,
   valid_from timestamp,
-  valid_to timestamp
+  valid_to timestamp,
+  __ts_ms timestamp
 )
 WITH (appendonly=true, orientation=column, compresstype=ZSTD)
 DISTRIBUTED BY (id)
