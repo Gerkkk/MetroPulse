@@ -13,7 +13,11 @@ services:
     volumes:
       - oltp_data:/var/lib/postgresql/data
       - ./oltp/migrations:/docker-entrypoint-initdb.d
-    command: ["postgres", "-c", "max_prepared_transactions=100"]
+      - ./oltp/postgresql.conf.override:/etc/postgresql/postgresql.conf
+    command: >
+      postgres
+      -c config_file=/etc/postgresql/postgresql.conf
+      -c max_prepared_transactions=100
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "user", "-d", "oltp"]
       interval: 5s
@@ -126,6 +130,29 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  minio-mc-setup:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "
+      mc alias set localminio http://minio:9000 admin admin1234 &&
+      mc mb localminio/kafka/payments &&
+      mc mb localminio/kafka/rides &&
+      mc mb localminio/kafka/routes &&
+      mc mb localminio/kafka/users &&
+      mc mb localminio/kafka/vehicles &&
+      mc mb localminio/kafka/vehicle_positions
+      "
+    networks:
+      - app-net
 
   spark-staging:
     build:
@@ -200,8 +227,53 @@ services:
       app-net:
 
 
+  kafka-connect:
+    image: debezium/connect:2.6
+    container_name: kafka-connect
+    depends_on:
+      - kafka
+      - oltp-db
+    ports:
+      - "8083:8083"
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: connect_configs
+      OFFSET_STORAGE_TOPIC: connect_offsets
+      STATUS_STORAGE_TOPIC: connect_statuses
+
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+
+      REST_ADVERTISED_HOST_NAME: kafka-connect
+    volumes:
+      - connect-data:/kafka/connect
+    networks:
+      - kafka-net
+      - app-net
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8083/connectors" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  register-connectors:
+    build:
+      context: .
+      dockerfile: dockerfiles/register.Dockerfile
+    container_name: register-connectors
+    depends_on:
+      kafka-connect:
+        condition: service_healthy
+    networks:
+      - app-net
+
+
 volumes:
   oltp_data:
+  connect-data:
   dwh-data:
 
 networks:

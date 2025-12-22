@@ -1,0 +1,26 @@
+{
+  "name": "pg-tables",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+
+    "database.hostname": "oltp-db",
+    "database.port": "5432",
+    "database.user": "user",
+    "database.password": "password",
+    "database.dbname": "oltp",
+    "database.server.name": "pg",
+
+    "slot.name": "debezium_users_slot",
+    "plugin.name": "pgoutput",
+    "topic.prefix": "pg",
+
+    "table.include.list": "public.vehicles,public.rides,public.payments,public.routes,public.users",
+    "snapshot.mode": "initial",
+
+    "transforms": "unwrap",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.unwrap.drop.tombstones": "true",
+    "transforms.unwrap.add.fields": "op,table,ts_ms",
+    "decimal.handling.mode": "string"
+  }
+}
