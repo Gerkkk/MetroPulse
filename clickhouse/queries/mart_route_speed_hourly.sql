@@ -3,7 +3,7 @@ l_position_vehicle as (
   select id_position, id_vehicle
   from (
     select *, row_number() over (partition by id order by load_date desc) rn
-    from "L_POSITION_VEHICLE"
+    from L_POSITION_VEHICLE
   ) t
   where rn = 1
 ),
@@ -11,7 +11,7 @@ l_route_vehicle as (
   select id_route, id_vehicle
   from (
     select *, row_number() over (partition by id order by load_date desc) rn
-    from "L_ROUTE_VEHICLE"
+    from L_ROUTE_VEHICLE
   ) t
   where rn = 1
 ),
@@ -19,15 +19,15 @@ h_routes as (
   select id, route_id
   from (
     select *, row_number() over (partition by id order by load_date desc) rn
-    from "H_ROUTES"
+    from H_ROUTES
   ) t
   where rn = 1
 ),
 s_routes as (
-  select * from "S_ROUTES"
+  select * from S_ROUTES
 ),
 s_positions as (
-  select * from "S_POSITIONS"
+  select * from S_POSITIONS
 ),
 base as (
   select

@@ -3,7 +3,7 @@ l_ride_route as (
   select id_ride, id_route
   from (
     select *, row_number() over (partition by id order by load_date desc) rn
-    from "L_RIDE_ROUTE"
+    from L_RIDE_ROUTE
   ) t
   where rn = 1
 ),
@@ -11,7 +11,7 @@ l_ride_user as (
   select id_ride, id_user
   from (
     select *, row_number() over (partition by id order by load_date desc) rn
-    from "L_RIDE_USER"
+    from L_RIDE_USER
   ) t
   where rn = 1
 ),
@@ -19,7 +19,7 @@ l_ride_vehicle as (
   select id_ride, id_vehicle
   from (
     select *, row_number() over (partition by id order by load_date desc) rn
-    from "L_RIDE_VEHICLE"
+    from L_RIDE_VEHICLE
   ) t
   where rn = 1
 ),
@@ -27,14 +27,14 @@ l_ride_payment as (
   select id_ride, id_payment
   from (
     select *, row_number() over (partition by id order by load_date desc) rn
-    from "L_RIDE_PAYMENT"
+    from L_RIDE_PAYMENT
   ) t
   where rn = 1
 ),
-s_rides as (select * from "S_RIDES"),
-s_users as (select * from "S_USERS"),
-s_routes as (select * from "S_ROUTES"),
-s_payments as (select * from "S_PAYMENTS"),
+s_rides as (select * from S_RIDES),
+s_users as (select * from S_USERS),
+s_routes as (select * from S_ROUTES),
+s_payments as (select * from S_PAYMENTS),
 base as (
   select
     date_trunc('hour', sr.start_time) as hour_ts,
